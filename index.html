@@ -73,6 +73,7 @@
                 <h4 class="text-dark">Select Winner</h4>
                 <select id="winner" class="form-select mt-3"></select>
                 <button class="btn btn-primary mt-3" onclick="closeRound()">Close Round</button>
+                <button class="btn btn-danger mt-3" onclick="exitGame()">Exit</button>
             </div>
 
         </div>
@@ -136,6 +137,9 @@
             winnerSelect.innerHTML += `<option value="${i}">${playerName}</option>`;
         }
 
+        // Save Game State to localStorage
+        saveGameState();
+
         // Switch Screens
         document.getElementById('welcome-screen').classList.add('hidden');
         document.getElementById('main-screen').classList.remove('hidden');
@@ -161,6 +165,9 @@
             // Enable next player's bet button
             currentPlayer = (player % playerMoney.length) + 1;
             document.getElementById(`bet-btn${currentPlayer}`).disabled = false;
+
+            // Save game state after each bet
+            saveGameState();
         } else {
             alert("Invalid bet amount!");
         }
@@ -181,6 +188,9 @@
         // Reset for next round
         tableMoney = 0;
         resetButtons();
+
+        // Save game state after round is closed
+        saveGameState();
     }
 
     function resetButtons() {
@@ -191,8 +201,68 @@
         currentPlayer = 1;
     }
 
-    // Initialize Welcome Screen
-    window.onload = generatePlayerInputs;
+    // Save game state to localStorage
+    function saveGameState() {
+        localStorage.setItem('playerMoney', JSON.stringify(playerMoney));
+        localStorage.setItem('playerNames', JSON.stringify(playerNames));
+        localStorage.setItem('currentPlayer', currentPlayer);
+        localStorage.setItem('tableMoney', tableMoney);
+    }
+
+    // Load game state from localStorage
+    function loadGameState() {
+        const savedPlayerMoney = localStorage.getItem('playerMoney');
+        const savedPlayerNames = localStorage.getItem('playerNames');
+        const savedCurrentPlayer = localStorage.getItem('currentPlayer');
+        const savedTableMoney = localStorage.getItem('tableMoney');
+
+        if (savedPlayerMoney && savedPlayerNames && savedCurrentPlayer !== null && savedTableMoney !== null) {
+            playerMoney = JSON.parse(savedPlayerMoney);
+            playerNames = JSON.parse(savedPlayerNames);
+            currentPlayer = parseInt(savedCurrentPlayer);
+            tableMoney = parseInt(savedTableMoney);
+
+            // Populate UI with saved state
+            const playersContainer = document.getElementById('players-container');
+            const winnerSelect = document.getElementById('winner');
+
+            playersContainer.innerHTML = '';
+            winnerSelect.innerHTML = '';
+
+            playerNames.forEach((name, index) => {
+                playersContainer.innerHTML += `
+                    <div class="text-center">
+                        <h6>Money: <span id="money${index + 1}">${playerMoney[index]}</span></h6>
+                        <p>${name}</p>
+                        <img src="https://img.icons8.com/color/96/user.png" alt="${name}" class="img-fluid rounded-circle">
+                        <input type="number" id="bet${index + 1}" class="form-control mt-2" placeholder="Enter Bet">
+                        <button class="btn btn-success mt-2 btn-bet" onclick="placeBet(${index + 1})" id="bet-btn${index + 1}" ${index + 1 !== currentPlayer ? 'disabled' : ''}>BET</button>
+                    </div>
+                `;
+                winnerSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
+            });
+
+            document.getElementById('table-money').innerText = tableMoney;
+        }
+    }
+
+    // Exit Game: Reset session and go back to the welcome screen
+    function exitGame() {
+        localStorage.clear();  // Clear saved game state
+        location.reload();  // Reload the page to go back to the welcome screen
+    }
+
+    // Initialize Welcome Screen or Load Game State
+    window.onload = function() {
+        const savedGameState = localStorage.getItem('playerMoney');
+        if (savedGameState) {
+            loadGameState();
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+        } else {
+            generatePlayerInputs();
+        }
+    };
 </script>
 </body>
 </html>
