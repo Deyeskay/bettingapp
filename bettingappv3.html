@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Betting Application</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Icons8 Image Library -->
+    <script src="https://img.icons8.com"></script>
+</head>
+<body class="bg-light">
+
+<!-- Main Container -->
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Left Section: Score -->
+        <div class="col-md-2 bg-warning p-3">
+            <h4 class="text-dark text-center">Score</h4>
+            <div id="score" class="mt-3"></div>
+        </div>
+
+        <!-- Middle Section: Game Table & Players -->
+        <div class="col-md-8 text-center py-4">
+            <!-- Table Section -->
+            <div class="mb-4">
+                <h5>Money on Table: <span id="table-money" class="fw-bold">0</span></h5>
+                <img src="https://cdn-icons-png.flaticon.com/512/1663/1663908.png" alt="Table" style="width:75px" class="img-fluid mb-3">
+            </div>
+
+            <!-- Players Section -->
+            <div class="row justify-content-center g-4">
+                <!-- Player 1 -->
+                <div class="col-4 text-center">
+                    <h6>Money: <span id="money1">200</span></h6>
+                    <p>Player 1</p>
+                    <img src="https://img.icons8.com/color/96/user.png" alt="Player 1" class="img-fluid rounded-circle">
+                    <input type="number" id="bet1" class="form-control mt-2" placeholder="Enter Bet">
+                    <button class="btn btn-primary mt-2" onclick="placeBet(1)" id="bet-btn1">BET</button>
+                </div>
+
+                <!-- Player 2 -->
+                <div class="col-4 text-center">
+                    <h6>Money: <span id="money2">200</span></h6>
+                    <p>Player 2</p>
+                    <img src="https://img.icons8.com/color/96/user.png" alt="Player 2" class="img-fluid rounded-circle">
+                    <input type="number" id="bet2" class="form-control mt-2" placeholder="Enter Bet">
+                    <button class="btn btn-primary mt-2" onclick="placeBet(2)" id="bet-btn2" disabled>BET</button>
+                </div>
+
+                <!-- Player 3 -->
+                <div class="col-4 text-center">
+                    <h6>Money: <span id="money3">200</span></h6>
+                    <p>Player 3</p>
+                    <img src="https://img.icons8.com/color/96/user.png" alt="Player 3" class="img-fluid rounded-circle">
+                    <input type="number" id="bet3" class="form-control mt-2" placeholder="Enter Bet">
+                    <button class="btn btn-primary mt-2" onclick="placeBet(3)" id="bet-btn3" disabled>BET</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Winner Selection -->
+        <div class="col-md-2 bg-warning p-3 text-center">
+            <h4 class="text-dark">Select Winner</h4>
+            <select id="winner" class="form-select mt-3">
+                <option value="1">Player 1</option>
+                <option value="2">Player 2</option>
+                <option value="3">Player 3</option>
+            </select>
+            <button class="btn btn-success mt-3" onclick="closeRound()">Close Round</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let tableMoney = 0;
+    const playerMoney = [200, 200, 200];
+    let currentPlayer = 1;
+
+    function placeBet(player) {
+        const betInput = document.getElementById(`bet${player}`);
+        const betValue = parseInt(betInput.value);
+
+        if (betValue > 0 && betValue <= playerMoney[player - 1]) {
+            // Deduct bet amount
+            playerMoney[player - 1] -= betValue;
+            document.getElementById(`money${player}`).innerText = playerMoney[player - 1];
+
+            // Add to table
+            tableMoney += betValue;
+            document.getElementById('table-money').innerText = tableMoney;
+
+            // Reset input and disable current player's button
+            betInput.value = '';
+            document.getElementById(`bet-btn${player}`).disabled = true;
+
+            // Enable next player's bet button
+            currentPlayer = (player % 3) + 1; // Cycle players: 1 -> 2 -> 3 -> 1
+            document.getElementById(`bet-btn${currentPlayer}`).disabled = false;
+        } else {
+            alert("Invalid bet amount!");
+        }
+    }
+
+    function closeRound() {
+        const winner = parseInt(document.getElementById('winner').value);
+        playerMoney[winner - 1] += tableMoney;
+
+        // Update UI
+        document.getElementById(`money${winner}`).innerText = playerMoney[winner - 1];
+        document.getElementById('table-money').innerText = 0;
+
+        // Add to score table
+        const score = document.getElementById('score');
+        score.innerHTML += `<p>Player ${winner} won: ${tableMoney}</p>`;
+
+        // Reset for next round
+        tableMoney = 0;
+        resetButtons();
+    }
+
+    function resetButtons() {
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`bet-btn${i}`).disabled = (i !== 1); // Start with Player 1
+            document.getElementById(`bet${i}`).value = '';
+        }
+        currentPlayer = 1;
+    }
+</script>
+</body>
+</html>
