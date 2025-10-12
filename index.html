@@ -1,268 +1,482 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Betting Application</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Icons8 Image Library -->
-    <script src="https://img.icons8.com"></script>
-    <style>
-        .hidden {
-            display: none;
-        }
-        .player-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .btn:disabled{
-            background-color: gray;
-        }
-        .btn-bet { 
-            background-color: #198754;
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virtual Betting Application</title>
+
+  <!-- Bootstrap (kept for grid) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Inter font for a modern UI feel (fallbacks to system-ui) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons8 (unchanged) -->
+  <script src="https://img.icons8.com"></script>
+
+<style>
+  /* ===================== THEME ===================== */
+  :root{
+    --bg:#0c0f14;
+    --surface:#11151b;
+    --surface-2:#0f1318;
+    --border:rgba(255,255,255,.06);
+    --text:#e8eaed;
+    --muted:#9aa0a6;
+    --primary:#22c55e;
+    --primary-600:#16a34a;
+    --primary-700:#15803d;
+    --accent:#4f46e5;
+    --danger:#ef4444;
+    --danger-700:#b91c1c;
+    --radius:16px;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+    --shadow-sm:0 6px 18px rgba(0,0,0,.25);
+
+    /* Fields (readability on dark) */
+    --field-bg:#0b1116;
+    --field-bg-focus:#0e151c;
+    --field-border:rgba(255,255,255,.10);
+    --field-border-focus:rgba(34,197,94,.60);
+    --placeholder:#a0a7b0;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(79,70,229,.08), transparent 60%),
+      radial-gradient(1000px 800px at 100% 10%, rgba(34,197,94,.05), transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    line-height:1.45;
+    font-size:15px;            /* smaller, tighter */
+    padding-top:60px;          /* default space for fixed brand */
+  }
+
+  /* ===================== BRAND HEADER ===================== */
+  .brand{
+    position:fixed;
+    top:14px; left:16px;
+    display:flex; align-items:center; gap:10px;
+    user-select:none; z-index:1000;
+    height:48px;               /* explicit footprint to help layout */
+  }
+  .brand img{ width:40px; height:40px; display:block; border-radius:8px; }
+  .brand .t{ font-weight:700; font-size:16px; letter-spacing:.2px; color:var(--text); }
+
+  /* ===================== LAYOUT WRAPPERS ===================== */
+  .hidden{ display:none; }
+  .container, .container-fluid{ max-width:1200px; }
+
+  /* Panels */
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    background-color:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    padding:14px;              /* slightly tighter */
+    height:100%;
+  }
+
+  /* Headings (smaller) */
+  h1,h2,h3,h4,h5{ color:var(--text); margin:0; }
+  h2{ font-size:20px; font-weight:700; letter-spacing:.2px; }
+  h4{ font-size:16px; font-weight:700; }
+
+  /* ===================== CARDS / CONTENT ===================== */
+  .table-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:var(--shadow-sm);
+    text-align:center;
+  }
+
+  .players-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(240px,1fr));
+    gap:16px;
+  }
+  @media (min-width:992px){ .players-grid{ grid-template-columns:repeat(3, 1fr); } }
+  @media (max-width:576px){ .players-grid{ grid-template-columns:1fr; } }
+
+  .player-card{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:var(--shadow-sm);
+    text-align:center;
+  }
+  .player-card img{
+    width:72px; height:72px; border-radius:50%;
+    display:block; margin:8px auto 12px;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));
+  }
+  .money{ font-weight:600; color:var(--text); font-size:15px; }
+  .player-name{ color:var(--muted); font-size:13px; margin-top:2px; }
+
+  /* ===================== FORMS ===================== */
+  .form-section{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:var(--shadow-sm);
+  }
+  label.form-label{ color:var(--muted); font-weight:600; margin-bottom:6px; }
+
+  .form-select, .form-control{
+    background:var(--field-bg);
+    color:#e8eaed;
+    border:1px solid var(--field-border);
+    border-radius:12px;
+    padding:10px 12px;
+    outline:none!important;
+    box-shadow:none!important;
+    caret-color:#e8eaed;
+  }
+  .form-select:focus, .form-control:focus{
+    background:var(--field-bg-focus);
+    color:#f3f4f6;
+    border-color:var(--field-border-focus);
+    box-shadow:0 0 0 3px rgba(34,197,94,.18);
+  }
+  .form-control::placeholder,
+  .form-select::placeholder{
+    color:var(--placeholder);
+    opacity:1;
+  }
+  /* Prevent low-contrast autofill flash on dark */
+  input:-webkit-autofill{
+    -webkit-text-fill-color:#e8eaed !important;
+    -webkit-box-shadow:0 0 0 1000px var(--field-bg) inset !important;
+    caret-color:#e8eaed;
+  }
+
+  .w-25.mx-auto{ max-width:360px !important; }
+
+  /* ===================== BUTTONS ===================== */
+  .btn{
+    border-radius:12px;
+    border:1px solid transparent;
+    font-weight:600;
+    padding:9px 12px;          /* a touch smaller */
+    font-size:14px;
+    transition:transform .06s ease, filter .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .btn-success, .btn-bet{
+    background:linear-gradient(180deg, var(--primary), var(--primary-600));
+    border-color:rgba(34,197,94,.35);
+    color:#0b190f;
+  }
+  .btn-success:hover, .btn-bet:hover{
+    background:linear-gradient(180deg, var(--primary-600), var(--primary-700));
+  }
+
+  .btn-primary{
+    background:#2563eb;
+    border-color:rgba(37,99,235,.45);
+  }
+  .btn-primary:hover{ background:#1d4ed8; }
+
+  .btn-danger{
+    background:var(--danger);
+    border-color:rgba(239,68,68,.45);
+    color:#1c0a0a;
+  }
+  .btn-danger:hover{ background:var(--danger-700); }
+
+  /* ===================== SPACING ===================== */
+  .screen-pad{ padding-top:28px; padding-bottom:28px; }
+  .mt-1{ margin-top:4px !important; }
+  .mt-2{ margin-top:8px !important; }
+  .mt-3{ margin-top:12px !important; }
+  .mt-4{ margin-top:16px !important; }
+
+  /* Score list */
+  #score p{ margin:0 0 8px; color:var(--muted); font-size:14px; }
+
+  /* Prevent brand/title overlap on smaller screens */
+  @media (max-width:992px){
+    body{ padding-top:72px; }  /* a bit more room for fixed brand */
+    .screen-pad{ padding-top:24px; }
+  }
+</style>
+
 </head>
-<body class="bg-light">
+<body>
 
-<!-- Welcome Screen -->
-<div id="welcome-screen" class="container text-center mt-5">
-    <h2>Welcome to Virtual Betting Application</h2>
-    <div class="mt-4">
-        <label for="player-count" class="form-label">Select Number of Players (2-6):</label>
-        <select id="player-count" class="form-select w-25 mx-auto" onchange="generatePlayerInputs()">
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-        </select>
-    </div>
-    <div id="player-inputs" class="mt-4"></div>
-    <button class="btn btn-success mt-3" onclick="startGame()">Start</button>
-</div>
+  <!-- Header -->
+  <header class="brand">
+    <img src="https://deyeskay.github.io/hub/sk-download.svg" alt="DumbCharades logo">
+    <span class="t">Virtual Betting Application</span>
+  </header>
 
-<!-- Main Application Screen -->
-<div id="main-screen" class="hidden">
-    <div class="container-fluid">
-        <div class="row">
+  <!-- ============== WELCOME SCREEN ============== -->
+  <div id="welcome-screen" class="container screen-pad">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
 
-            <!-- Left Section: Score -->
-            <div class="col-md-2 bg-warning p-3">
-                <h4 class="text-dark text-center">Score</h4>
-                <div id="score" class="mt-3"></div>
-            </div>
-
-            <!-- Middle Section: Game Table & Players -->
-            <div class="col-md-8 text-center py-4">
-                <!-- Table Section -->
-                <div class="mb-4">
-                    <h5>Money on Table: <span id="table-money" class="fw-bold">0</span></h5>
-                    <img src="https://cdn-icons-png.flaticon.com/512/1663/1663908.png" style="width:75px" alt="Table" class="img-fluid mb-3">
-                </div>
-
-                <!-- Players Section -->
-                <div id="players-container" class="player-container"></div>
-            </div>
-
-            <!-- Right Section: Winner Selection -->
-            <div class="col-md-2 bg-warning p-3 text-center">
-                <h4 class="text-dark">Select Winner</h4>
-                <select id="winner" class="form-select mt-3"></select>
-                <button class="btn btn-primary mt-3" onclick="closeRound()">Close Round</button>
-                <button class="btn btn-danger mt-3" onclick="exitGame()">Exit</button>
-            </div>
-
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2>Get Started</h2>
         </div>
+
+        <div class="form-section mb-3">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+              <label for="player-count" class="form-label">Number of Players</label>
+              <select id="player-count" class="form-select" onchange="generatePlayerInputs()">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="starting-money" class="form-label">Pocket Money (per player)</label>
+              <input type="number" id="starting-money" class="form-control" placeholder="e.g., 200" min="0" step="1" value="200">
+            </div>
+          </div>
+        </div>
+
+        <div id="player-inputs" class="form-section mb-3"></div>
+
+        <div class="d-grid d-sm-inline-flex gap-2">
+          <button class="btn btn-success" onclick="startGame()">Start</button>
+        </div>
+
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- ============== MAIN SCREEN ============== -->
+  <div id="main-screen" class="hidden container screen-pad">
+    <div class="row g-3">
+      <!-- Left: Score -->
+      <div class="col-lg-3">
+        <div class="panel">
+          <h4>Score</h4>
+          <div id="score" class="mt-3"></div>
+        </div>
+      </div>
 
-<script>
+      <!-- Middle: Table + Players -->
+      <div class="col-lg-6">
+        <div class="table-wrap mb-3 text-center">
+          <h5 class="mb-2">Money on Table: <span id="table-money" class="fw-bold">0</span></h5>
+          <img src="https://cdn-icons-png.flaticon.com/512/1663/1663908.png" style="width:64px" alt="Table" class="img-fluid">
+        </div>
+
+        <div id="players-container" class="players-grid"></div>
+      </div>
+
+      <!-- Right: Winner -->
+      <div class="col-lg-3">
+        <div class="panel text-start">
+          <h4>Select Winner</h4>
+          <select id="winner" class="form-select mt-3"></select>
+          <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary" onclick="closeRound()">Close Round</button>
+            <button class="btn btn-danger" onclick="exitGame()">Exit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
     let tableMoney = 0;
     let playerMoney = [];
     let playerNames = [];
     let currentPlayer = 1;
+    let startingMoney = 200;
 
-    // Generate player input fields based on selected count
-    function generatePlayerInputs() {
-        const playerCount = document.getElementById('player-count').value;
-        const inputsContainer = document.getElementById('player-inputs');
-        inputsContainer.innerHTML = '';
-
-        for (let i = 1; i <= playerCount; i++) {
-            inputsContainer.innerHTML += `
-                <div class="mt-2">
-                    <label for="player-name${i}" class="form-label">Player ${i} Name:</label>
-                    <input type="text" id="player-name${i}" class="form-control w-50 mx-auto" placeholder="Enter Player ${i} Name" required>
-                </div>
-            `;
-        }
+    function sanitize(s){
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
     }
 
-    // Start Game: Show Main Screen with Dynamic Players
-    function startGame() {
-        const playerCount = document.getElementById('player-count').value;
+    // Build name inputs
+    function generatePlayerInputs(){
+      const n = parseInt(document.getElementById('player-count').value,10);
+      const box = document.getElementById('player-inputs');
+      let html = '<div class="row g-3">';
+      for (let i=1;i<=n;i++){
+        html += `
+          <div class="col-md-6">
+            <label for="player-name${i}" class="form-label">Player ${i} Name</label>
+            <input type="text" id="player-name${i}" class="form-control" placeholder="Enter Player ${i} Name">
+          </div>`;
+      }
+      html += '</div>';
+      box.innerHTML = html;
+    }
+
+    // Start game
+    function startGame(){
+      const n = parseInt(document.getElementById('player-count').value,10);
+      const smVal = parseInt(document.getElementById('starting-money').value,10);
+      startingMoney = Number.isFinite(smVal) && smVal >= 0 ? smVal : 0;
+
+      playerMoney = Array(n).fill(startingMoney);
+      playerNames = [];
+
+      const playersContainer = document.getElementById('players-container');
+      const winnerSelect = document.getElementById('winner');
+      playersContainer.innerHTML = '';
+      winnerSelect.innerHTML = '';
+
+      for (let i=1;i<=n;i++){
+        const rawName = document.getElementById(`player-name${i}`)?.value || `Player ${i}`;
+        const name = sanitize(rawName);
+        playerNames.push(name);
+
+        playersContainer.innerHTML += `
+          <div class="player-card">
+            <div class="money">Money: <span id="money${i}">${startingMoney}</span></div>
+            <div class="player-name">${name}</div>
+            <img src="https://img.icons8.com/color/96/user.png" alt="${name}">
+            <input type="number" id="bet${i}" class="form-control mt-2" placeholder="Enter Bet" min="0" step="1">
+            <button class="btn btn-bet mt-2" onclick="placeBet(${i})" id="bet-btn${i}" ${i>1?'disabled':''}>BET</button>
+          </div>
+        `;
+
+        winnerSelect.innerHTML += `<option value="${i}">${name}</option>`;
+      }
+
+      saveGameState();
+
+      // switch screens
+      document.getElementById('welcome-screen').classList.add('hidden');
+      document.getElementById('main-screen').classList.remove('hidden');
+    }
+
+    function placeBet(player){
+      const betInput = document.getElementById(`bet${player}`);
+      const betValue = parseInt(betInput.value,10);
+
+      if (Number.isFinite(betValue) && betValue > 0 && betValue <= playerMoney[player-1]){
+        playerMoney[player-1] -= betValue;
+        document.getElementById(`money${player}`).innerText = playerMoney[player-1];
+
+        tableMoney += betValue;
+        document.getElementById('table-money').innerText = tableMoney;
+
+        betInput.value = '';
+        document.getElementById(`bet-btn${player}`).disabled = true;
+
+        currentPlayer = (player % playerMoney.length) + 1;
+        document.getElementById(`bet-btn${currentPlayer}`).disabled = false;
+
+        saveGameState();
+      } else {
+        alert('Invalid bet amount!');
+      }
+    }
+
+    function closeRound(){
+      const winner = parseInt(document.getElementById('winner').value,10);
+      playerMoney[winner-1] += tableMoney;
+
+      document.getElementById(`money${winner}`).innerText = playerMoney[winner-1];
+      document.getElementById('table-money').innerText = 0;
+
+      const score = document.getElementById('score');
+      score.innerHTML += `<p>${playerNames[winner-1]} won: ${tableMoney}</p>`;
+
+      tableMoney = 0;
+      resetButtons();
+      saveGameState();
+    }
+
+    function resetButtons(){
+      for (let i=1;i<=playerMoney.length;i++){
+        document.getElementById(`bet-btn${i}`).disabled = (i !== 1);
+        document.getElementById(`bet${i}`).value = '';
+      }
+      currentPlayer = 1;
+    }
+
+    function saveGameState(){
+      localStorage.setItem('playerMoney', JSON.stringify(playerMoney));
+      localStorage.setItem('playerNames', JSON.stringify(playerNames));
+      localStorage.setItem('currentPlayer', currentPlayer);
+      localStorage.setItem('tableMoney', tableMoney);
+      localStorage.setItem('startingMoney', startingMoney);
+    }
+
+    function loadGameState(){
+      const sPM = localStorage.getItem('playerMoney');
+      const sPN = localStorage.getItem('playerNames');
+      const sCP = localStorage.getItem('currentPlayer');
+      const sTM = localStorage.getItem('tableMoney');
+      const sSM = localStorage.getItem('startingMoney');
+
+      if (sPM && sPN && sCP !== null && sTM !== null){
+        playerMoney = JSON.parse(sPM);
+        playerNames = JSON.parse(sPN);
+        currentPlayer = parseInt(sCP,10);
+        tableMoney = parseInt(sTM,10);
+        startingMoney = sSM !== null ? parseInt(sSM,10) : 0;
+
         const playersContainer = document.getElementById('players-container');
         const winnerSelect = document.getElementById('winner');
-
-        // Initialize Player Data
-        playerMoney = Array(parseInt(playerCount)).fill(200);
-        playerNames = [];
         playersContainer.innerHTML = '';
         winnerSelect.innerHTML = '';
 
-        // Get Player Names and Populate UI
-        for (let i = 1; i <= playerCount; i++) {
-            const playerName = document.getElementById(`player-name${i}`).value || `Player ${i}`;
-            playerNames.push(playerName);
+        playerNames.forEach((name, idx)=>{
+          playersContainer.innerHTML += `
+            <div class="player-card">
+              <div class="money">Money: <span id="money${idx+1}">${playerMoney[idx]}</span></div>
+              <div class="player-name">${sanitize(name)}</div>
+              <img src="https://img.icons8.com/color/96/user.png" alt="${sanitize(name)}">
+              <input type="number" id="bet${idx+1}" class="form-control mt-2" placeholder="Enter Bet" min="0" step="1">
+              <button class="btn btn-bet mt-2" onclick="placeBet(${idx+1})" id="bet-btn${idx+1}" ${(idx+1)!==currentPlayer?'disabled':''}>BET</button>
+            </div>
+          `;
+          winnerSelect.innerHTML += `<option value="${idx+1}">${sanitize(name)}</option>`;
+        });
 
-            // Player Card
-            playersContainer.innerHTML += `
-                <div class="text-center">
-                    <h6>Money: <span id="money${i}">200</span></h6>
-                    <p>${playerName}</p>
-                    <img src="https://img.icons8.com/color/96/user.png" alt="${playerName}" class="img-fluid rounded-circle">
-                    <input type="number" id="bet${i}" class="form-control mt-2" placeholder="Enter Bet">
-                    <button class="btn btn-success mt-2 btn-bet" onclick="placeBet(${i})" id="bet-btn${i}" ${i > 1 ? 'disabled' : ''}>BET</button>
-                </div>
-            `;
+        document.getElementById('table-money').innerText = tableMoney;
+      }
+    }
 
-            // Populate Winner Dropdown
-            winnerSelect.innerHTML += `<option value="${i}">${playerName}</option>`;
-        }
+    function exitGame(){
+      localStorage.clear();
+      location.reload();
+    }
 
-        // Save Game State to localStorage
-        saveGameState();
-
-        // Switch Screens
+    // Init
+    window.onload = function(){
+      const saved = localStorage.getItem('playerMoney');
+      if (saved){
+        loadGameState();
         document.getElementById('welcome-screen').classList.add('hidden');
         document.getElementById('main-screen').classList.remove('hidden');
-    }
-
-    function placeBet(player) {
-        const betInput = document.getElementById(`bet${player}`);
-        const betValue = parseInt(betInput.value);
-
-        if (betValue > 0 && betValue <= playerMoney[player - 1]) {
-            // Deduct bet amount
-            playerMoney[player - 1] -= betValue;
-            document.getElementById(`money${player}`).innerText = playerMoney[player - 1];
-
-            // Add to table
-            tableMoney += betValue;
-            document.getElementById('table-money').innerText = tableMoney;
-
-            // Reset input and disable current player's button
-            betInput.value = '';
-            document.getElementById(`bet-btn${player}`).disabled = true;
-
-            // Enable next player's bet button
-            currentPlayer = (player % playerMoney.length) + 1;
-            document.getElementById(`bet-btn${currentPlayer}`).disabled = false;
-
-            // Save game state after each bet
-            saveGameState();
-        } else {
-            alert("Invalid bet amount!");
+      }else{
+        generatePlayerInputs();
+        const sm = localStorage.getItem('startingMoney');
+        if (sm !== null){
+          const v = parseInt(sm,10);
+          if (Number.isFinite(v) && v >= 0) document.getElementById('starting-money').value = v;
         }
-    }
-
-    function closeRound() {
-        const winner = parseInt(document.getElementById('winner').value);
-        playerMoney[winner - 1] += tableMoney;
-
-        // Update UI
-        document.getElementById(`money${winner}`).innerText = playerMoney[winner - 1];
-        document.getElementById('table-money').innerText = 0;
-
-        // Add to score table
-        const score = document.getElementById('score');
-        score.innerHTML += `<p>${playerNames[winner - 1]} won: ${tableMoney}</p>`;
-
-        // Reset for next round
-        tableMoney = 0;
-        resetButtons();
-
-        // Save game state after round is closed
-        saveGameState();
-    }
-
-    function resetButtons() {
-        for (let i = 1; i <= playerMoney.length; i++) {
-            document.getElementById(`bet-btn${i}`).disabled = (i !== 1);
-            document.getElementById(`bet${i}`).value = '';
-        }
-        currentPlayer = 1;
-    }
-
-    // Save game state to localStorage
-    function saveGameState() {
-        localStorage.setItem('playerMoney', JSON.stringify(playerMoney));
-        localStorage.setItem('playerNames', JSON.stringify(playerNames));
-        localStorage.setItem('currentPlayer', currentPlayer);
-        localStorage.setItem('tableMoney', tableMoney);
-    }
-
-    // Load game state from localStorage
-    function loadGameState() {
-        const savedPlayerMoney = localStorage.getItem('playerMoney');
-        const savedPlayerNames = localStorage.getItem('playerNames');
-        const savedCurrentPlayer = localStorage.getItem('currentPlayer');
-        const savedTableMoney = localStorage.getItem('tableMoney');
-
-        if (savedPlayerMoney && savedPlayerNames && savedCurrentPlayer !== null && savedTableMoney !== null) {
-            playerMoney = JSON.parse(savedPlayerMoney);
-            playerNames = JSON.parse(savedPlayerNames);
-            currentPlayer = parseInt(savedCurrentPlayer);
-            tableMoney = parseInt(savedTableMoney);
-
-            // Populate UI with saved state
-            const playersContainer = document.getElementById('players-container');
-            const winnerSelect = document.getElementById('winner');
-
-            playersContainer.innerHTML = '';
-            winnerSelect.innerHTML = '';
-
-            playerNames.forEach((name, index) => {
-                playersContainer.innerHTML += `
-                    <div class="text-center">
-                        <h6>Money: <span id="money${index + 1}">${playerMoney[index]}</span></h6>
-                        <p>${name}</p>
-                        <img src="https://img.icons8.com/color/96/user.png" alt="${name}" class="img-fluid rounded-circle">
-                        <input type="number" id="bet${index + 1}" class="form-control mt-2" placeholder="Enter Bet">
-                        <button class="btn btn-success mt-2 btn-bet" onclick="placeBet(${index + 1})" id="bet-btn${index + 1}" ${index + 1 !== currentPlayer ? 'disabled' : ''}>BET</button>
-                    </div>
-                `;
-                winnerSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
-            });
-
-            document.getElementById('table-money').innerText = tableMoney;
-        }
-    }
-
-    // Exit Game: Reset session and go back to the welcome screen
-    function exitGame() {
-        localStorage.clear();  // Clear saved game state
-        location.reload();  // Reload the page to go back to the welcome screen
-    }
-
-    // Initialize Welcome Screen or Load Game State
-    window.onload = function() {
-        const savedGameState = localStorage.getItem('playerMoney');
-        if (savedGameState) {
-            loadGameState();
-            document.getElementById('welcome-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
-        } else {
-            generatePlayerInputs();
-        }
+      }
     };
-</script>
+  </script>
 </body>
 </html>
